@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+MAKE="make --file=$(git rev-parse --show-toplevel)/Makefile"
+PHP_FILES_IN_DIFF=$($MAKE phpdiff)
+
+if [ -z "$PHP_FILES_IN_DIFF" ]; then
+  echo "# No PHP file changes detected. No phplint required."
+  exit 0
+fi
+
+FILES_TO_LINT=$(make phpdiff-one-line)
+echo $FILES_TO_LINT
+
+echo "$MAKE phplint args=$FILES_TO_LINT"
+LINT_RESULT=$($MAKE phplint args=$FILES_TO_LINT)
+
+
+if [ $? -eq "0" ]; then
+  exit 0
+else
+  echo "There were some errors."
+  echo "You must add these fixes before being allowed to commit."
+  echo ""
+  echo -e "$LINT_RESULT"
+  exit 1
+fi
